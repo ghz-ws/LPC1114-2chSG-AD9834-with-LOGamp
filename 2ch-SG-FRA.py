@@ -4,26 +4,31 @@ import numpy
 import csv
 import matplotlib.pyplot as plt
 
-inst=serial.Serial("COM10",115200)
-Start_Freq=1000     ##kHz unit
-Stop_Freq=1001     ##kHz unit
-Step_Freq=0.1       ##kHz unit
+inst=serial.Serial("COM43",9600)
+Start_Freq=100000     ##Hz unit
+Stop_Freq=5000000     ##Hz unit
+Step_Freq=100000       ##Hz unit
 Wait=0.01             ##sec
-Ampl=[1000,1000]  ##mV unit. 50ohm loaded.
+Ampl=[2000,2000]  ##mV unit. 50ohm loaded.
 
 step=int((Stop_Freq-Start_Freq)/Step_Freq)
 data=numpy.zeros((step,3))
 for i in range(step):
     freq=Start_Freq+i*Step_Freq
-    buf=f'{int(freq*1000):08}'+'000'+f'{Ampl[0]:04}'+f'{int(freq*1000):08}'+'000'+f'{Ampl[1]:04}'
+    buf='S1,'+f'{freq}'+',0,'+f'{Ampl[0]}'+','
     inst.write(buf.encode())
     time.sleep(Wait)
+    buf='?'
+    inst.write(buf.encode())
+    inst.read(4)
     buf=inst.read(4)
     data1=int(buf)
+    inst.read(1)
     buf=inst.read(4)
     data2=int(buf)
-    print('Freq=',int(freq*1000),'Hz, Ch1=',data1,'mV, Ch2=',data2,'mV')
-    data[i][0]=int(freq*1000)
+    inst.read(3)    ##remove \n\r
+    print('Freq=',int(freq),'Hz, Ch1=',data1,'mV, Ch2=',data2,'mV')
+    data[i][0]=int(freq)
     data[i][1]=data1
     data[i][2]=data2
     
